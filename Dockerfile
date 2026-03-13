@@ -1,9 +1,8 @@
-FROM node:20-alpine
+FROM node:20-alpine AS base
+
+RUN apk add --no-cache python3 make g++ sqlite
 
 WORKDIR /app
-
-# Install build dependencies for native modules (better-sqlite3)
-RUN apk add --no-cache python3 make g++ sqlite
 
 COPY package.json package-lock.json ./
 
@@ -11,15 +10,33 @@ RUN npm i
 
 COPY . .
 
+RUN mkdir -p data
+
 RUN npm run build
 
-# Create writable directory for SQLite database
-RUN mkdir -p /app/data && chmod 777 /app/data
+FROM node:20-alpine AS runner
 
-ENV DATABASE_PATH=/app/data/database.sqlite
+RUN apk add --no-cache sqlite
+
+WORKDIR /app
+
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV DATABASE_PATH=./data/calculator.db
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=base /app/public ./public
+COPY --from=base /app/.next/standalone ./
+COPY --from=base /app/.next/static ./.next/static
+
+RUN mkdir -p data && chown -R nextjs:nodejs /app
+
+USER nextjs
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]

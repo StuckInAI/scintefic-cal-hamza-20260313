@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Calculator',
-  description: 'A fully functional calculator built with Next.js',
+  title: 'Calculator App',
+  description: 'A fully functional calculator with history',
 };
 
 export default function RootLayout({
@@ -13,9 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
